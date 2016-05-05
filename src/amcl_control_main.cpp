@@ -62,28 +62,12 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
 
     twist_cmd2_.twist = twist_cmd_;
     twist_cmd2_.header.stamp = ros::Time::now();
-}
 
-//member helper function to set up subscribers;
-void SteeringController::initializeSubscribers() {
-    ROS_INFO("Initializing Subscribers: odom and desState");
-    odom_subscriber_ = nh_.subscribe("/odom", 1, &SteeringController::odomCallback, this); //subscribe to odom messages
-    // add more subscribers here, as needed
-    des_state_subscriber_ = nh_.subscribe("/desState", 1, &SteeringController::desStateCallback, this); // for desired state messages
-}
-
-//member helper function to set up publishers;
-void SteeringController::initializePublishers()
-{
-    ROS_INFO("Initializing Publishers: cmd_vel and cmd_vel_stamped");
-    cmd_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1, true); // talks to the robot!
-    cmd_publisher2_ = nh_.advertise<geometry_msgs::TwistStamped>("cmd_vel_stamped",1, true); //alt topic, includes time stamp
-    //steering_errs_publisher_ =  nh_.advertise<std_msgs::Float32MultiArray>("steering_errs",1, true);
+    tfListener_ = new tf::TransformListener; 
 }
 
 // 
 void SteeringController::transform_odom_to_map() {
-    tfListener_ = new tf::TransformListener; 
  
     bool tferr=true;
     ROS_INFO("waiting for tf...");
@@ -108,6 +92,25 @@ void SteeringController::transform_odom_to_map() {
     // from now on, tfListener will keep track of transforms from map frame to target frame
 }
 
+
+//member helper function to set up subscribers;
+void SteeringController::initializeSubscribers() {
+    ROS_INFO("Initializing Subscribers: odom and desState");
+    odom_subscriber_ = nh_.subscribe("/odom", 1, &SteeringController::odomCallback, this); //subscribe to odom messages
+    // add more subscribers here, as needed
+    des_state_subscriber_ = nh_.subscribe("/desState", 1, &SteeringController::desStateCallback, this); // for desired state messages
+}
+
+//member helper function to set up publishers;
+void SteeringController::initializePublishers()
+{
+    ROS_INFO("Initializing Publishers: cmd_vel and cmd_vel_stamped");
+    cmd_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1, true); // talks to the robot!
+    cmd_publisher2_ = nh_.advertise<geometry_msgs::TwistStamped>("cmd_vel_stamped",1, true); //alt topic, includes time stamp
+    //steering_errs_publisher_ =  nh_.advertise<std_msgs::Float32MultiArray>("steering_errs",1, true);
+}
+
+
 void SteeringController::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
     // copy some of the components of the received message into member vars
     // we care about speed and spin, as well as position estimates x,y and heading
@@ -116,11 +119,12 @@ void SteeringController::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
     odom_pose_ = odom_rcvd.pose.pose;
     odom_vel_ = odom_rcvd.twist.twist.linear.x;
     odom_omega_ = odom_rcvd.twist.twist.angular.z;
-    odom_x_ = odom_rcvd.pose.pose.position.x - mapToOdom_.getOrigin().x();
-    odom_y_ = odom_rcvd.pose.pose.position.y - mapToOdom_.getOrigin().y();
+
+    odom_x_ = 0.5 * odom_rcvd.pose.pose.position.x + 0.5 * mapToOdom_.getOrigin().x();
+    odom_y_ = 0.5 * odom_rcvd.pose.pose.position.y + 0.5 * mapToOdom_.getOrigin().y();
     odom_quat_ = odom_rcvd.pose.pose.orientation;
     //odom publishes orientation as a quaternion.  Convert this to a simple heading
-    odom_phi_ = convertPlanarQuat2Phi(odom_quat_) - tf::getYaw( mapToOdom_.getRotation() ); // cheap conversion from quaternion to heading for planar motion
+    odom_phi_ = 0.5 * convertPlanarQuat2Phi(odom_quat_) + 0.5 * tf::getYaw( mapToOdom_.getRotation() ); // cheap conversion from quaternion to heading for planar motion
     // let's put odom x,y in an Eigen-style 2x1 vector; convenient for linear algebra operations
     //odom_xy_vec_(0) = odom_x_;
     //odom_xy_vec_(1) = odom_y_;   
@@ -223,7 +227,7 @@ void SteeringController::lin_steering_algorithm() {
     controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err;
     
     controller_omega = MAX_OMEGA*sat(controller_omega/MAX_OMEGA); // saturate omega command at specified limits
-    controller_omega = MAX_OMEGA*sat(controller_speed/MAX_SPEED); 
+    controller_speed = MAX_SPEED*sat(controller_speed/MAX_SPEED); 
 
     // send out our very clever speed/spin commands:
     twist_cmd_.linear.x = controller_speed;

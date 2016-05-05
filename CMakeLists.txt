@@ -25,18 +25,19 @@ catkin_simple()
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries: uncomment the following and edit arguments to create a new library
-cs_add_library(zeta_amcl_pub_des_state src/pub_des_state.cpp)
-cs_add_library(zeta_amcl_traj_builder src/traj_builder.cpp)   
+#cs_add_library(zeta_amcl_pub_des_state src/pub_des_state.cpp)
+#cs_add_library(zeta_amcl_traj_builder src/traj_builder.cpp)   
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
 cs_add_executable(zeta_amcl_main src/amcl_control_main.cpp)
-cs_add_executable(zeta_pub_des src/pub_des_state_startup_main.cpp)
+cs_add_executable(zeta_pub_des src/pub_des_state_startup_main.cpp src/pub_des_state.cpp src/traj_builder.cpp)
+cs_add_executable(zeta_odom_tf src/odom_tf.cpp src/odom_tf_fncs.cpp)
 
 # the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
-target_link_libraries(zeta_pub_des zeta_amcl_pub_des_state)
-target_link_libraries(zeta_amcl_pub_des_state zeta_amcl_traj_builder)
+#target_link_libraries(zeta_pub_des zeta_amcl_pub_des_state)
+#target_link_libraries(zeta_amcl_pub_des_state zeta_amcl_traj_builder)
 
 cs_install()
 cs_export()

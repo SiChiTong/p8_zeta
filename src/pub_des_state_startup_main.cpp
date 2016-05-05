@@ -1,4 +1,4 @@
-#include <p8_zeta/pub_des_state.h>
+#include "pub_des_state.h"
 //this version starts up a desired-state publisher, but does not cause any initial moves
 int main(int argc, char **argv) {
 
@@ -16,6 +16,12 @@ int main(int argc, char **argv) {
 
 
     // NEED TO POPULATE WITH POINTS TO TRAVEL TO IN THE HALL
+    // desStatePublisher.append_path_queue(0.5, 0.0, 0.0);
+    desStatePublisher.append_path_queue(2.0, 0.0, 0.0);
+    desStatePublisher.append_path_queue(2.0, 2.0, 0.0);
+    desStatePublisher.append_path_queue(0.0, 2.0, 0.0);
+    desStatePublisher.append_path_queue(0.0, 0.0, 0.0);
+    
 
     // main loop; publish a desired state every iteration
     while (ros::ok()) {

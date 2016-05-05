@@ -1,13 +1,14 @@
 <launch>
 
 	<!-- start odom tf to interpret amcl publications -->
-	<node pkg="odom_tf" type="odom_tf" name="odom_tf" />
+	<node pkg="p8_zeta" type="zeta_odom_tf" name="zeta_odom_tf" />
 
 	<!-- start amcl -->
 	<node pkg="amcl" type="amcl" name="amcl" />
 
 	<!-- start map server -->
-	<node pkg="map_server" type="map_server" name="map_server" args="$(find p8_zeta)/g12_map/g12_map.yaml" />
+	<!-- <node pkg="map_server" type="map_server" name="map_server" args="$(find p8_zeta)/g12_map/g12_map.yaml" /> -->
+	<node pkg="map_server" type="map_server" name="map_server" args="$(find p8_zeta)/newMap.yaml" />
 
 	<node pkg="p8_zeta" type="zeta_amcl_main" name="zeta_amcl_main" />
 	<node pkg="p8_zeta" type="zeta_pub_des" name="zeta_pub_des" />
